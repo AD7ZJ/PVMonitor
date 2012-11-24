@@ -42,7 +42,7 @@ body {
     $time_start = microtime(true);
 
     $connection = new connect;
-    $connection->database = "PVoutput";
+    $connection->database = "PVOutputNew";
     $connection->connect();
 
     $yday = date("z");
@@ -69,7 +69,7 @@ body {
 
     $ydayminone = $yday - 1;
     $roll = 30;
-    $dayroll = 28;
+    $dayroll = 250;
     $queryCount = 0;
 
     $sql="SELECT * FROM Xantrex_Daily WHERE (Month ='$monthNum' AND Year='$year') OR (Month = '$monthLessOne' AND Year = '$yearLessOne') ORDER BY Year, YearDay";
@@ -171,13 +171,20 @@ body {
 function hourly_graph($result, $dayroll, $datavals, $title, $type, $image) {
     $num = mysql_num_rows($result);
     if($result) {
-	if($num > $dayroll) {
+        if($num > $dayroll) {
             if(!mysql_data_seek($result, ($num - $dayroll))) {
                 print("Cannot seek to row location");
             }
-	}
+        }
 
+        $rowCount = 0;
         while($row = mysql_fetch_assoc($result)) {
+            $rowCount++;
+            if($rowCount % 5 == 0)
+                $showXValue = true;
+            else
+                $showXValue = false;
+
             $day = $row["MonthDay"];
             $hour = $row["Hour"];
             $min = $row["Minute"];
@@ -188,13 +195,28 @@ function hourly_graph($result, $dayroll, $datavals, $title, $type, $image) {
             $voltage_out = $row["Vout"];
             $power_out = $row["Pout"];
             $sinktemp = $row["Temp"];
-            $IinArray["$day     $hour:$min"] = $current_in;
-            $VinArray["$day     $hour:$min"] = $voltage_in;
-            $PinArray["$day     $hour:$min"] = $power_in;
-            $IoutArray["$day     $hour:$min"] = $current_out;
-            $VoutArray["$day     $hour:$min"] = $voltage_out;
-            $PoutArray["$day     $hour:$min"] = $power_out;
-            $TempFArray["$day     $hour:$min"] = $sinktemp;
+
+            $min = str_pad($min, 2, "0", STR_PAD_LEFT);
+            if($showXValue) {
+                $IinArray["$day     $hour:$min"] = $current_in;
+                $VinArray["$day     $hour:$min"] = $voltage_in;
+                $PinArray["$day     $hour:$min"] = $power_in;
+                $IoutArray["$day     $hour:$min"] = $current_out;
+                $VoutArray["$day     $hour:$min"] = $voltage_out;
+                $PoutArray["$day     $hour:$min"] = $power_out;
+                $TempFArray["$day     $hour:$min"] = $sinktemp;
+            }
+            else {
+                // since phpgraphlib doesn't have a way to filter the X values, to plot a lot of points and
+                // still have the X values readable, we push the unwanted values off the canvas with spaces
+                $IinArray["$day:$hour:$min          "] = $current_in;
+                $VinArray["$day:$hour:$min          "] = $voltage_in;
+                $PinArray["$day:$hour:$min          "] = $power_in;
+                $IoutArray["$day:$hour:$min          "] = $current_out;
+                $VoutArray["$day:$hour:$min          "] = $voltage_out;
+                $PoutArray["$day:$hour:$min          "] = $power_out;
+                $TempFArray["$day:$hour:$min          "] = $sinktemp;
+            }
         }
     }
 
@@ -240,6 +262,7 @@ function hourly_graph($result, $dayroll, $datavals, $title, $type, $image) {
         $graph->setDataValueColor("blue");
         $graph->setLegend(true);
         $graph->setLegendColor("205,183,158");
+        $graph->setXValues(true);
         $graph->createGraph();
     }
     else {
@@ -348,7 +371,7 @@ mysql_close();
 <div class="center">
     <h2>Live Image</h2><br>
     <?php
-	if($_SERVER['REMOTE_ADDR'] == gethostbyname('blue.kingmanmodelers.com')) {
+	if($_SERVER['REMOTE_ADDR'] == gethostbyname('ad7zj-kingman.no-ip.org')) {
 	    print("<img src=\"http://192.168.254.6/cams/motion/Backyard/Live_Snapshot_Backyard.jpg\"><br>");
 	}
 	else {
