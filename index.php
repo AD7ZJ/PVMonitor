@@ -43,7 +43,7 @@ body {
 
     $connection = new connect;
     $connection->database = "PVOutputNew";
-    $connection->connect();
+    $db = $connection->connect();
 
     $yday = date("z");
     $year = date("Y");
@@ -69,21 +69,21 @@ body {
 
     $ydayminone = $yday - 1;
     $roll = 30;
-    $dayroll = 250;
+    $dayroll = 150;
     $queryCount = 0;
 
     $sql="SELECT * FROM Xantrex_Daily WHERE (Month ='$monthNum' AND Year='$year') OR (Month = '$monthLessOne' AND Year = '$yearLessOne') ORDER BY Year, YearDay";
-    $result = mysql_query($sql) or die('Query failed: ' . mysql_error());
+    $result = $db->query($sql) or die('Query failed: ' . $db->error());
     $queryCount++;
 
-    $num = mysql_num_rows($result);
+    $num = $result->num_rows;
     if($result) {
-	if($num > $roll) {
-            if(!mysql_data_seek($result, ($num - $roll))) {
+        if($num > $roll) {
+            if(!$result->data_seek($num - $roll)) {
                 print("Cannot seek to row location");
             }
-	}
-        while($row = mysql_fetch_assoc($result)) {
+        }
+        while($row = $result->fetch_assoc()) {
             $yearShort = $row["Year"];
             $yearShort = $yearShort - 2000;
             $mon = $row["Month"];
@@ -113,31 +113,31 @@ body {
     /************************  Generate a past history graph ****************************/
     $roll = 400;
     $sql="SELECT * FROM Xantrex_Daily ORDER BY Year, YearDay";
-    $result = mysql_query($sql) or die('Query failed: ' . mysql_error());
+    $result = $db->query($sql) or die('Query failed: ' . $db->error());
     $queryCount++;
 
-    $num = mysql_num_rows($result);
+    $num = $result->num_rows;
     if($result) {
-	if($num > $roll) {
-            if(!mysql_data_seek($result, ($num - $roll))) {
+        if($num > $roll) {
+            if(!$result->data_seek($num - $roll)) {
                 print("Cannot seek to row location");
             }
-	}
-	$row = mysql_fetch_assoc($result);
+        }
+        $row = $result->fetch_assoc();
         while($row) {
-	    $KWHsum = 0;
-	    $numDays = 0;
-	    $prevMonth = $row["Month"];
-	    $monthName = date( 'M', mktime(0, 0, 0, $prevMonth ));
-	    while($prevMonth == $row["Month"]) {
-	 	$numDays++;
-            	$yearShort = $row["Year"];
-            	$yearShort = $yearShort - 2000;
-            	$mon = $row["Month"];
-            	$day = $row["MonthDay"];
-            	$KWHsum += $row["KWHtoday"];
-		$row = mysql_fetch_assoc($result);
-	    }
+            $KWHsum = 0;
+            $numDays = 0;
+            $prevMonth = $row["Month"];
+            $monthName = date( 'M', mktime(0, 0, 0, $prevMonth ));
+            while($prevMonth == $row["Month"]) {
+                $numDays++;
+                $yearShort = $row["Year"];
+                $yearShort = $yearShort - 2000;
+                $mon = $row["Month"];
+                $day = $row["MonthDay"];
+                $KWHsum += $row["KWHtoday"];
+                $row = $result->fetch_assoc();
+            }
             $KWHtotal["$monthName $yearShort"] = round($KWHsum / $numDays,3);
         }
     }
@@ -162,23 +162,22 @@ body {
 
     // Now generate hourly graphs
     $sql="SELECT * FROM Xantrex_Hourly WHERE YearDay >='$ydayminone' AND Year='$year' ORDER BY YearDay, Hour, Minute";
-    $result = mysql_query($sql) or die('Query failed: ' . mysql_error());
+    $result = $db->query($sql) or die('Query failed: ' . $db->error());
     $queryCount++;
 
     hourly_graph($result, $dayroll, false, "Power In & Out", "Pin", "power_in.png");
 
-
 function hourly_graph($result, $dayroll, $datavals, $title, $type, $image) {
-    $num = mysql_num_rows($result);
+    $num = $result->num_rows;
     if($result) {
         if($num > $dayroll) {
-            if(!mysql_data_seek($result, ($num - $dayroll))) {
+            if(!$result->data_seek($num - $dayroll)) {
                 print("Cannot seek to row location");
             }
         }
 
         $rowCount = 0;
-        while($row = mysql_fetch_assoc($result)) {
+        while($row = $result->fetch_assoc()) {
             $rowCount++;
             if($rowCount % 5 == 0)
                 $showXValue = true;
@@ -292,13 +291,13 @@ function hourly_graph($result, $dayroll, $datavals, $title, $type, $image) {
 <?php
     print "<table><tr>";
     $sql = "SELECT * FROM Xantrex_Daily ORDER BY Year, YearDay";
-    $result = mysql_query($sql);
+    $result = $db->query($sql);
     $queryCount++;
 
     $prevYear  = 0;
     $prevMonth = 0;
     $calsPrinted = 0;
-    $row = mysql_fetch_assoc($result);
+    $row = $result->fetch_assoc();
     while($row) {
 	$prevMonth = $row["Month"];
 	$prevYear  = $row["Year"];
@@ -306,8 +305,7 @@ function hourly_graph($result, $dayroll, $datavals, $title, $type, $image) {
 	while($prevMonth == $row["Month"]) {
 	    // There's an entry for this day, make a link
 	    $days[$row["MonthDay"]] = array("history.php?day={$row["MonthDay"]}&month={$row["Month"]}&year={$row["Year"]}",'linked-day');   	
-	    $row = mysql_fetch_assoc($result);
-	    $rowPointer++;
+	    $row = $result->fetch_assoc();
 	}	     
 
         echo generate_calendar($prevYear, ($prevMonth), $days);
@@ -365,19 +363,12 @@ function generate_calendar($year, $month, $days = array(), $day_name_length = 3,
     return $calendar."</tr>\n</table>\n";
 }
 $time_end = microtime(true);
-mysql_close();
+$db->close();
 ?>
 </div><br>
 <div class="center">
     <h2>Live Image</h2><br>
-    <?php
-	if($_SERVER['REMOTE_ADDR'] == gethostbyname('ad7zj-kingman.no-ip.org')) {
-	    print("<img src=\"http://192.168.254.6/cams/motion/Backyard/Live_Snapshot_Backyard.jpg\"><br>");
-	}
-	else {
-	    print("<img src=\"http://blue.kingmanmodelers.com/cams/motion/Backyard/Live_Snapshot_Backyard.jpg\"><br>");
-	}
-?>
+    TBD
 </div><br>
 <?php 
     $time = round($time_end - $time_start,4);

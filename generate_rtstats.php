@@ -10,7 +10,7 @@
     $retArgs = array();
 
 
-    if(!$fileLine = file('http://ad7zj-kingman.no-ip.org:82/cgi-bin/xanquery.sh')) {
+    if(!$fileLine = file('http://kingman.ad7zj.net:82/cgi-bin/xanquery.sh')) {
         die("Failed to contact remote inverter");
     }
 
@@ -61,79 +61,75 @@
     $black = imagecolorallocate($dispiin, 35, 35, 35);
 
     // Font to use
-    //$font = '/usr/share/fonts/truetype/LCD/Digire__.ttf';
-    //$font = '/usr/share/fonts/truetype/LCD/Digireu_.ttf';
-    //$font = '/usr/share/fonts/truetype/LCD/Digir___.ttf';
-    //$font = '/usr/share/fonts/truetype/LCD/DIGIRT__.TTF';
-    $font = '/usr/share/fonts/truetype/LCD/DIGIRU__.TTF';
+    $font = '/var/www/pv/Digireu_.ttf';
 
     // We'll start with the input voltage
     $text = "$vin V";
     // Add the text to the image
-    imagettftext($dispvin, 20, 0, 20, 42, $black, $font, $text);
+    imagettftext($dispvin, 20, 0, 28, 48, $black, $font, $text);
     // Output the image to file
     imagepng($dispvin, "$savePath/vin.png");
 
     // Now iin
     $text = "$iin A";
     // Add the text to the image
-    imagettftext($dispiin, 20, 0, 20, 42, $black, $font, $text);
+    imagettftext($dispiin, 20, 0, 28, 48, $black, $font, $text);
     // Output the image to file
     imagepng($dispiin, "$savePath/iin.png");
 
     // Now pin
     $text = "$pin W";
     // Add the text to the image
-    imagettftext($disppin, 20, 0, 20, 42, $black, $font, $text);
+    imagettftext($disppin, 20, 0, 28, 48, $black, $font, $text);
     // Output the image to file
     imagepng($disppin, "$savePath/pin.png");
 
     // Now vout
     $text = "$vout V";
     // Add the text to the image
-    imagettftext($dispvout, 20, 0, 20, 42, $black, $font, $text);
+    imagettftext($dispvout, 20, 0, 28, 48, $black, $font, $text);
     // Output the image to file
     imagepng($dispvout, "$savePath/vout.png");
 
     // Now iout
     $text = "$iout A";
     // Add the text to the image
-    imagettftext($dispiout, 20, 0, 20, 42, $black, $font, $text);
+    imagettftext($dispiout, 20, 0, 28, 48, $black, $font, $text);
     // Output the image to file
     imagepng($dispiout, "$savePath/iout.png");
 
     // Now pout
     $text = "$pout W";
     // Add the text to the image
-    imagettftext($disppout, 20, 0, 20, 42, $black, $font, $text);
+    imagettftext($disppout, 20, 0, 28, 48, $black, $font, $text);
     // Output the image to file
     imagepng($disppout, "$savePath/pout.png");
 
     // Now frequency
     $text = "$freq Hz";
     // Add the text to the image
-    imagettftext($dispfreq, 20, 0, 20, 42, $black, $font, $text);
+    imagettftext($dispfreq, 20, 0, 28, 48, $black, $font, $text);
     // Output the image to file
     imagepng($dispfreq, "$savePath/freq.png");
 
     // Now kwh_today
     $text = "$kwh_today Kh";
     // Add the text to the image
-    imagettftext($dispkwh_today, 20, 0, 15, 42, $black, $font, $text);
+    imagettftext($dispkwh_today, 20, 0, 28, 48, $black, $font, $text);
     // Output the image to file
     imagepng($dispkwh_today, "$savePath/kwh_today.png");
  
     // Now kwh_life
     $text = "$kwh_life Kh";
     // Add the text to the image
-    imagettftext($dispkwh_life, 20, 0, 15, 42, $black, $font, $text);
+    imagettftext($dispkwh_life, 20, 0, 28, 48, $black, $font, $text);
     // Output the image to file
     imagepng($dispkwh_life, "$savePath/kwh_life.png");
 
     // Now Temp
     $text = "$tempF F";
     // Add the text to the image
-    imagettftext($dispTempF, 20, 0, 15, 42, $black, $font, $text);
+    imagettftext($dispTempF, 20, 0, 28, 48, $black, $font, $text);
     // Output the image to file
     imagepng($dispTempF, "$savePath/TempF.png");
 

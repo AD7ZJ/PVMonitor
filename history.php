@@ -3,13 +3,13 @@
     include("mysql_conn.php"); 
     $time_start = microtime(true);
 
-    $mday=$_GET[day];
-    $monthNum=$_GET[month];
-    $year=$_GET[year];
+    $mday=$_GET["day"];
+    $monthNum=$_GET["month"];
+    $year=$_GET["year"];
 
     $connection = new connect;
     $connection->database = "PVOutputNew";
-    $connection->connect();
+    $db = $connection->connect();
 
 
     // If not passed in the URL, use data from today
@@ -42,9 +42,9 @@
     $dayroll = 28;
 
     $sql="SELECT * FROM Xantrex_Daily WHERE (Month ='$monthNum' AND Year='$year') OR (Month = '$monthLessOne' AND Year = '$yearLessOne') ORDER BY Year, YearDay";
-    $result = mysql_query($sql) or die('Query failed: ' . mysql_error());
+    $result = $db->query($sql) or die('Query failed: ' . $db->error());
 
-    $num = mysql_num_rows($result);
+    $num = $result->num_rows;
     if($num < 30) {
 	$pointer = 0;
     }
@@ -52,10 +52,10 @@
 	$pointer = $num - $roll;
     }
     if($result) {
-	if(!mysql_data_seek($result, $pointer)) {
+	if(!$result->data_seek($pointer)) {
 	    print("Cannot seek to row location");
 	}
-	while($row = mysql_fetch_assoc($result)) {
+	while($row = $result->fetch_assoc()) {
 	    $yearShort = $row["Year"];
 	    $yearShort = $yearShort - 2000;
 	    $mon = $row["Month"];
@@ -84,10 +84,10 @@
 
    // print("$num rows affected");
     if($result) {
-        if(!mysql_data_seek($result, $pointer)) {
+        if(!$result->data_seek($pointer)) {
             print("Cannot seek to row location");
         }
-        while($row = mysql_fetch_assoc($result)) {
+        while($row = $result->fetch_assoc()) {
             $yearShort = $row["Year"];
             $yearShort = $yearShort - 2000;
             $mon = $row["Month"];
@@ -117,7 +117,7 @@
     // Now generate hourly graphs
 
     $sql="SELECT * FROM Xantrex_Hourly WHERE Month = '$monthNum' AND MonthDay ='$mday' AND Year='$year' ORDER BY YearDay, Hour, Minute";
-    $result = mysql_query($sql) or die('Query failed: ' . mysql_error());
+    $result = $db->query($sql) or die('Query failed: ' . $db->error());
 
     hourly_graph($result, $dayroll, false, "Current In & Out for $monthNum/$mday/$yearShort", "Iin", "current_in.png");
     hourly_graph($result, $dayroll, false, "Voltage In & Out for $monthNum/$mday/$yearShort", "Vin", "voltage_in.png");
@@ -130,13 +130,13 @@
     print("$num rows affected.  Page generated in {$time}s");
 
 function hourly_graph($result, $dayroll, $datavals, $title, $type, $image) {
-    $num = mysql_num_rows($result);
+    $num = $result->num_rows;
     if($result) {
-        if(!mysql_data_seek($result, 0)) {
+        if(!$result->data_seek(0)) {
             print("Cannot seek to row location");
         } 
         $rowCount = 0;
-        while($row = mysql_fetch_assoc($result)) {
+        while($row = $result->fetch_assoc()) {
             if($rowCount++ % 5 == 0) 
                 $showXValue = true;
             else
@@ -229,7 +229,7 @@ function hourly_graph($result, $dayroll, $datavals, $title, $type, $image) {
 
 }
 
-    mysql_close();
+    $db->close();
 ?>
 
 <html>

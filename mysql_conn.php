@@ -6,10 +6,11 @@ class connect {
     public $database;
 
     public function connect() {
-        if (!mysql_connect('localhost',$this->user,$this->pass)) {
+        $db = new mysqli('localhost',$this->user,$this->pass,$this->database);
+        if ($db->connect_errno) {
             echo "MySQL Connection was unsuccessful";
         }
-        mysql_select_db($this->database);
+        return $db;
     }
 }
 ?>
